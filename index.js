@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const fs = require("fs");
 const path = require("path");
 const XLSX = require("xlsx");
@@ -6,36 +8,42 @@ const rl = require("readline-sync");
 // __dirname is the current directory name /Users/aduong/Documents/projects/node-projects/create-new-folder
 const currentDirectory = path.join(__dirname);
 
-// change the folder path to something else like filename-test
-const folderName = `${currentDirectory}/test`;
 // creates a folder if it doesn't exist already
+const folderName = `${currentDirectory}/test`;
 createFolder(folderName);
 
+// grab all files with .xlsx extension
+// returns an array
 const files = fs
   .readdirSync(currentDirectory)
   .filter((fn) => fn.endsWith(".xlsx"));
 
-console.log(files);
-const chosenFile = rl.question("Which file do you want? ");
-// start extracting first row from workbook
+console.log(`You have ${files.length} excel files\n`);
+console.log(files, "\n");
+const chosenFile = ask("Which file do you want to use? ");
 
+// start extracting first row from workbook
 const workbook = XLSX.readFile(files[chosenFile]);
 const worksheet = workbook.Sheets["Sheet1"];
 const jsonSheet = XLSX.utils.sheet_to_json(worksheet);
 const newSheet = XLSX.utils.json_to_sheet(new Array(jsonSheet[0]));
-
-const newFilename = rl.question("What do you want the new file name to be? ");
-console.log(`The new file will be named: ${newFilename}`);
+const newFilename = ask("What do you want the new file name to be? ");
 
 // start new workbook and save in test directory
 const newWorkbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Sheet1");
 XLSX.writeFile(newWorkbook, `${currentDirectory}/test/${newFilename}-test.csv`);
+console.log(
+  `Your new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv`
+);
 
-// abstracted functions
 function createFolder(name) {
   try {
     if (!fs.existsSync(name)) {
+      console.group("Test folder does not exist");
+      console.log(`Creating folder in ${currentDirectory}/test`);
+      console.log("Folder successfully created");
+      console.groupEnd();
       fs.mkdirSync(name);
     }
   } catch (err) {
@@ -43,6 +51,11 @@ function createFolder(name) {
   }
 }
 
+function ask(question) {
+  return rl.question(question, (answer) => {
+    rl.write(`Answer: ${answer}\n`);
+  });
+}
 /**
  *
  * Features to add
