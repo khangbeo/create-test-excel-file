@@ -27,16 +27,14 @@ const workbook = XLSX.readFile(files[fileIndex]);
 const worksheet = workbook.Sheets["Sheet1"];
 const jsonSheet = XLSX.utils.sheet_to_json(worksheet);
 const newSheet = XLSX.utils.json_to_sheet(new Array(jsonSheet[0]));
-const newFilename = rl.question(
-  "\nWhat do you want the new file name to be?\n"
-);
+const newFilename = rl.question("\nWhat do you want the new file name to be?");
 
 // start new workbook and save in test directory
 const newWorkbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Sheet1");
 XLSX.writeFile(newWorkbook, `${currentDirectory}/test/${newFilename}-test.csv`);
 console.log(
-  `Your new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv\n`
+  `\nYour new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv\n`
 );
 
 function createFolder(name) {
@@ -62,6 +60,8 @@ function createFolder(name) {
  * first prompt makes an array and asks user to choose, need to change it so user can enter the file name instead of array index
  * or just make sure there's only one file in the folder and prevent user from using script if there's multiple files
  *
+ * add error handler for wrong input maybe with regex, case-insensitive input
+ * add a prompt loop
  * maybe get input with html form instead of terminal
  *     if html form, i don't need to get current directory, just drag and drop file then download the result
  */
