@@ -13,7 +13,6 @@ const folderName = `${currentDirectory}/test`;
 createFolder(folderName);
 
 // grab all files with .xlsx extension
-// returns an array
 const files = fs
   .readdirSync(currentDirectory)
   .filter((fn) => fn.endsWith(".xlsx"));
@@ -27,7 +26,16 @@ const workbook = XLSX.readFile(files[fileIndex]);
 const worksheet = workbook.Sheets["Sheet1"];
 const jsonSheet = XLSX.utils.sheet_to_json(worksheet);
 const newSheet = XLSX.utils.json_to_sheet(new Array(jsonSheet[0]));
-const newFilename = rl.question("\nWhat do you want the new file name to be?");
+let newFilename = "";
+
+console.log(
+  "\nWhat do you want the new file name to be? (case doesn't matter)"
+);
+rl.promptLoop((input) => {
+  return input.length > 0
+    ? (newFilename = input)
+    : console.log("You need to enter something!");
+});
 
 // start new workbook and save in test directory
 const newWorkbook = XLSX.utils.book_new();
@@ -36,6 +44,7 @@ XLSX.writeFile(newWorkbook, `${currentDirectory}/test/${newFilename}-test.csv`);
 console.log(
   `\nYour new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv\n`
 );
+console.log("Process finished!");
 
 function createFolder(name) {
   try {
