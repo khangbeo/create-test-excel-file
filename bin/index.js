@@ -8,21 +8,23 @@ function main() {
   const currentDirectory = getCurrentDirectory();
   createTestFolder(`${currentDirectory}/test-csv-files`);
   const foundFile = locateFiles(currentDirectory, "xlsx");
-  console.log(foundFile);
-  if (!foundFile) return;
+  if (!foundFile) {
+    console.log("Exiting program");
+    return;
+  }
   const data = parseExcelFile(currentDirectory, foundFile);
   const newName = askForName(foundFile);
   writeToCsvFile(data, currentDirectory, newName);
 }
 
-function createTestFolder(currentDirectory) {
+async function createTestFolder(currentDirectory) {
   try {
     if (!fs.existsSync(currentDirectory)) {
       console.group("Test folder does not exist");
       console.log(`Creating folder in ${currentDirectory}/test-csv-files`);
       console.log("Folder successfully created");
       console.groupEnd();
-      fs.mkdirSync(currentDirectory);
+      await fs.mkdirSync(currentDirectory);
     }
   } catch (e) {
     console.error(e);
@@ -101,13 +103,9 @@ function askForName(foundFile) {
   return newFilename;
 }
 
-function cleanUpName(name) {
-  return name.replace(".xlsx", "").toLowerCase().split(" ").join("-");
-}
-
-function getCurrentDirectory() {
-  return path.join(__dirname).replace("/bin", "");
-}
+const cleanUpName = (name) =>
+  name.replace(".xlsx", "").toLowerCase().split(" ").join("-");
+const getCurrentDirectory = () => path.join(__dirname).replace("/bin", "");
 
 main();
 
