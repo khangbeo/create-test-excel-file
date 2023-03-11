@@ -1,98 +1,120 @@
 #!/usr/bin/env node
-
 const fs = require("fs");
 const path = require("path");
 const XLSX = require("xlsx");
 const rl = require("readline-sync");
 
-// __dirname is the current directory name /Users/aduong/Documents/projects/node-projects/create-new-folder
-const currentDirectory = path.join(__dirname).replace("/bin", "");
-
-// creates a folder if it doesn't exist already
-createFolder(`${currentDirectory}/test`);
-
-// grab all files with .xlsx extension
-const files = fs
-  .readdirSync(currentDirectory)
-  .filter((fn) => fn.endsWith(".xlsx"));
-console.log(`You have ${files.length} excel files`);
-const fileIndex = rl.keyInSelect(files, "Which file do you want to use? ");
-if (fileIndex === -1) {
-  console.log("Exiting the program");
-  return;
-}
-const foundFile = files[fileIndex];
-
-let newFilename = "";
-const oldFilename = foundFile.replace(".xlsx", "");
-const changedFilename = cleanUpName(foundFile);
-
-createWorkbook(foundFile);
-
-function createWorkbook(foundFile) {
-  // start extracting first row from workbook
-  const workbook = XLSX.readFile(`${currentDirectory}/${foundFile}`);
-  const worksheet = workbook.Sheets["Sheet1"];
-  const jsonSheet = XLSX.utils.sheet_to_json(worksheet);
-  const newSheet = XLSX.utils.json_to_sheet(new Array(jsonSheet[0]));
-
-  console.log(
-    `\nWhat do you want the new file name to be? (case doesn't matter). 
-  Type same if you want to keep the old name.
-  Type update if you want the old name to be updated like this "file-name-lol.xlsx"`
-  );
-
-  rl.promptLoop(askForName);
-
-  // start new workbook and save in test directory
-  const newWorkbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Sheet1");
-  XLSX.writeFile(
-    newWorkbook,
-    `${currentDirectory}/test/${newFilename}-test.csv`
-  );
-  console.log(
-    `\nYour new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv\n`
-  );
-  console.log("Process finished!");
+function main() {
+  const currentDirectory = getCurrentDirectory();
+  createTestFolder(`${currentDirectory}/test`);
+  const foundFile = locateExcelFiles(currentDirectory);
+  if (!foundFile) return;
+  const data = parseExcelFile(currentDirectory, foundFile);
+  const newName = askForName(foundFile);
+  writeToCsvFile(data, currentDirectory, newName);
 }
 
-function createFolder(name) {
+function createTestFolder(currentDirectory) {
   try {
-    if (!fs.existsSync(name)) {
+    if (!fs.existsSync(currentDirectory)) {
       console.group("Test folder does not exist");
       console.log(`Creating folder in ${currentDirectory}/test`);
       console.log("Folder successfully created");
       console.groupEnd();
-      fs.mkdirSync(name);
+      fs.mkdirSync(currentDirectory);
     }
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
   }
 }
 
-function askForName(input) {
-  if (input.length === 0) {
-    console.log("You need to enter something!");
+function locateExcelFiles(currentDirectory) {
+  return locateFile(currentDirectory, "xlsx");
+}
+
+function parseExcelFile(currentDirectory, excelFile) {
+  try {
+    const workbook = XLSX.readFile(`${currentDirectory}/${excelFile}`);
+    const worksheet = workbook.Sheets["Sheet1"];
+    const jsonSheet = XLSX.utils.sheet_to_json(worksheet);
+    const firstTwoRows = XLSX.utils.json_to_sheet(new Array(jsonSheet[0]));
+    return firstTwoRows;
+  } catch (e) {
+    throw Error(e);
   }
-  switch (input) {
-    case "same":
-      newFilename = oldFilename;
-      break;
-    case "update":
-      newFilename = changedFilename;
-      break;
-    default:
-      newFilename = input.trim().toLowerCase();
+}
+
+function writeToCsvFile(newSheet, currentDirectory, newFilename) {
+  try {
+    const newWorkbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(newWorkbook, newSheet, "Sheet1");
+    XLSX.writeFile(
+      newWorkbook,
+      `${currentDirectory}/test/${newFilename}-test.csv`
+    );
+    console.log(
+      `\nYour new file "${newFilename}" is saved in this folder: ${currentDirectory}/test/${newFilename}.csv\n`
+    );
+    console.log("Process finished!");
+  } catch (e) {
+    throw Error(e);
   }
-  return true;
+}
+
+function locateFile(currentDirectory, extension) {
+  try {
+    const files = fs
+      .readdirSync(currentDirectory)
+      .filter((fn) => fn.endsWith(`.${extension}`));
+    console.log(`You have ${files.length} ${extension} files`);
+    const fileIndex = rl.keyInSelect(files, "Which file do you want to use? ");
+    return files[fileIndex];
+  } catch (err) {
+    throw Error(err);
+  }
+}
+
+function askForName(foundFile) {
+  let newFilename = "";
+  const oldFilename = foundFile.replace(".xlsx", "");
+  const changedFilename = cleanUpName(foundFile);
+  console.log(
+    `\nWhat do you want the new file name to be? (case doesn't matter). 
+      Type same if you want to keep the old name.
+      Type update if you want the old name to be updated like this "file-name-lol.xlsx"`
+  );
+
+  rl.promptLoop((input) => {
+    if (input.length === 0) {
+      console.log("You need to enter something!");
+      return;
+    }
+    switch (input) {
+      case "same":
+        newFilename = oldFilename;
+        break;
+      case "update":
+        newFilename = changedFilename;
+        break;
+      default:
+        newFilename = input.trim().toLowerCase();
+    }
+    return true;
+  });
+  return newFilename;
 }
 
 function cleanUpName(name) {
   return name.replace(".xlsx", "").toLowerCase().split(" ").join("-");
 }
-/**
- * script works but currently very messy
+
+function getCurrentDirectory() {
+  return path.join(__dirname).replace("/bin", "");
+}
+
+main();
+
+/* script works but currently very messy
  *     need to clean up functions and reorganize logic
  *
  * Features to add
@@ -106,5 +128,6 @@ function cleanUpName(name) {
  * add a prompt loop
  * maybe get input with html form instead of terminal
  *     if html form, i don't need to get current directory, just drag and drop file then download the result
+ *
  *
  */
