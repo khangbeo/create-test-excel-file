@@ -17,14 +17,14 @@ function main() {
   writeToCsvFile(data, currentDirectory, newName);
 }
 
-async function createTestFolder(currentDirectory) {
+function createTestFolder(currentDirectory) {
   try {
     if (!fs.existsSync(currentDirectory)) {
       console.group("Test folder does not exist");
       console.log(`Creating folder in ${currentDirectory}/test-csv-files`);
       console.log("Folder successfully created");
       console.groupEnd();
-      await fs.mkdirSync(currentDirectory);
+      fs.mkdirSync(currentDirectory);
     }
   } catch (e) {
     console.error(e);
@@ -78,9 +78,7 @@ function askForName(foundFile) {
   const oldFilename = foundFile.replace(".xlsx", "");
   const changedFilename = cleanUpName(foundFile);
   console.log(
-    `\nWhat do you want the new file name to be? (case doesn't matter). 
-      Type same if you want to keep the old name.
-      Type update if you want the old name to be updated like this "file-name-lol.csv"`
+    `What do you want the new file name to be? (case doesn't matter).\nType same if you want to keep the old name.\nType update if you want the old name to be updated like this "file-name-lol.csv"`
   );
 
   rl.promptLoop((input) => {
