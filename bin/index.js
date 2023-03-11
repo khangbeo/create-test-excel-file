@@ -7,7 +7,7 @@ const rl = require("readline-sync");
 function main() {
   const currentDirectory = getCurrentDirectory();
   createTestFolder(`${currentDirectory}/test`);
-  const foundFile = locateExcelFiles(currentDirectory);
+  const foundFile = locateFiles(currentDirectory, "xlsx");
   if (!foundFile) return;
   const data = parseExcelFile(currentDirectory, foundFile);
   const newName = askForName(foundFile);
@@ -18,7 +18,7 @@ function createTestFolder(currentDirectory) {
   try {
     if (!fs.existsSync(currentDirectory)) {
       console.group("Test folder does not exist");
-      console.log(`Creating folder in ${currentDirectory}/test`);
+      console.log(`Creating folder in ${currentDirectory}/test-csv-files`);
       console.log("Folder successfully created");
       console.groupEnd();
       fs.mkdirSync(currentDirectory);
@@ -26,10 +26,6 @@ function createTestFolder(currentDirectory) {
   } catch (e) {
     console.error(e);
   }
-}
-
-function locateExcelFiles(currentDirectory) {
-  return locateFile(currentDirectory, "xlsx");
 }
 
 function parseExcelFile(currentDirectory, excelFile) {
@@ -61,7 +57,7 @@ function writeToCsvFile(newSheet, currentDirectory, newFilename) {
   }
 }
 
-function locateFile(currentDirectory, extension) {
+function locateFiles(currentDirectory, extension) {
   try {
     const files = fs
       .readdirSync(currentDirectory)
